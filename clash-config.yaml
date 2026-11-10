@@ -1,0 +1,80 @@
+
+# ==========================================
+# 3X-UI Remote Clash Rules
+# For Mihomo / Clash Meta for Android
+# ==========================================
+
+# DNS configuration
+dns:
+  enable: true
+  ipv6: false
+
+  # Fake-IP mode
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+
+  # Bootstrap DNS:
+  # Used to resolve DNS server hostnames and other bootstrap needs
+  default-nameserver:
+    - 223.5.5.5
+
+  # DNS for proxy node domain resolution
+  # This must be available before the proxy tunnel is established
+  proxy-server-nameserver:
+    - 223.5.5.5
+
+  # Default DNS: overseas domains use Cloudflare DoH through PROXY
+  nameserver:
+    - "https://cloudflare-dns.com/dns-query#PROXY"
+
+  # Domestic and private domain DNS policies
+  nameserver-policy:
+    "geosite:cn":
+      - "https://dns.alidns.com/dns-query#DIRECT"
+
+    "geosite:private":
+      - "https://dns.alidns.com/dns-query#DIRECT"
+
+    "+.lan":
+      - "https://dns.alidns.com/dns-query#DIRECT"
+
+    "+.local":
+      - "https://dns.alidns.com/dns-query#DIRECT"
+
+  # DNS for DIRECT traffic
+  direct-nameserver:
+    - "https://dns.alidns.com/dns-query#DIRECT"
+
+  direct-nameserver-follow-policy: true
+
+  # Do not use Fake-IP for local domains
+  fake-ip-filter:
+    - "geosite:private"
+    - "+.lan"
+    - "+.local"
+    - "localhost"
+
+# Routing rules
+rules:
+  # OpenAI
+  - GEOSITE,openai,PROXY
+  - DOMAIN-SUFFIX,chatgpt.com,PROXY
+  - DOMAIN-SUFFIX,chat.com,PROXY
+  - DOMAIN-SUFFIX,openai.com,PROXY
+  - DOMAIN-SUFFIX,oaistatic.com,PROXY
+  - DOMAIN-SUFFIX,oaiusercontent.com,PROXY
+
+  # Anthropic / Claude
+  - GEOSITE,anthropic,PROXY
+  - DOMAIN-SUFFIX,claude.ai,PROXY
+  - DOMAIN-SUFFIX,claude.com,PROXY
+  - DOMAIN-SUFFIX,anthropic.com,PROXY
+
+  # Private and domestic traffic
+  - GEOSITE,private,DIRECT
+  - GEOIP,private,DIRECT
+  - GEOSITE,cn,DIRECT
+  - GEOIP,CN,DIRECT
+
+  # All other traffic
+  - MATCH,PROXY
