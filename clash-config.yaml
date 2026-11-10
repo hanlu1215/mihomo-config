@@ -6,51 +6,83 @@
 
 dns:
   enable: true
-  ipv6: false
+
+  # 开启 IPv6 DNS 解析，保留 AAAA 记录
+  ipv6: true
+
+  # Fake-IP 模式
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  fake-ip-range6: fdfe:dcba:9876::1/64
+
   cache-algorithm: arc
 
+  # DNS 请求遵循路由规则
+  # 配合 proxy-server-nameserver，避免代理节点解析循环依赖
+  respect-rules: true
+
+  # ------------------------------------------
   # DNS 引导服务器
-  # 用于解析 Cloudflare DoH 和代理节点等域名
+  # ------------------------------------------
+
+  # 用于解析 DNS 服务端等必要域名
   default-nameserver:
     - 223.5.5.5
 
-  # 代理节点域名解析
+  # 代理节点域名解析专用
+  # 不依赖代理隧道，避免循环依赖
   proxy-server-nameserver:
     - 223.5.5.5
 
-  # 默认 DNS：使用 Android 当前系统 DNS
-  nameserver:
-    - system
+  # ------------------------------------------
+  # 默认 DNS
+  # ------------------------------------------
 
-  # 根据域名分类选择 DNS
+  # 未命中 nameserver-policy 的域名
+  # 默认使用 Cloudflare DoH，并通过 PROXY 连接
+  nameserver:
+    - "https://cloudflare-dns.com/dns-query#PROXY"
+
+  # ------------------------------------------
+  # DNS 分流策略
+  # ------------------------------------------
+
   nameserver-policy:
 
-    # 国内域名：系统默认 DNS
-    "geosite:cn":
-      - system
-
-    # 私有域名：系统默认 DNS
-    "geosite:private":
-      - system
-
-    # 中山大学校园域名：系统默认 DNS
+    # 中山大学校园域名：系统 DNS
     "+.sysu.edu.cn":
       - system
+
     "+.sysu.org.cn":
       - system
 
-    # 已识别的境外域名：Cloudflare DoH，通过代理连接
+    # 国内域名：系统 DNS
+    "geosite:cn":
+      - system
+
+    # 私有域名：系统 DNS
+    "geosite:private":
+      - system
+
+    # 已识别的境外域名：Cloudflare DoH，经代理连接
     "geosite:geolocation-!cn":
       - "https://cloudflare-dns.com/dns-query#PROXY"
 
-  # DIRECT 出站的域名解析使用系统 DNS
+  # ------------------------------------------
+  # DIRECT 出站 DNS
+  # ------------------------------------------
+
+  # 直连出站的域名解析使用系统 DNS
   direct-nameserver:
     - system
+
   direct-nameserver-follow-policy: false
 
-  # 局域网和校园域名不使用 Fake-IP
+  # ------------------------------------------
+  # Fake-IP 过滤
+  # ------------------------------------------
+
+  # 以下域名不分配 Fake-IP，返回真实 DNS 解析结果
   fake-ip-filter:
     - "geosite:private"
     - "+.sysu.edu.cn"
@@ -59,16 +91,24 @@ dns:
     - "+.local"
     - "localhost"
 
+
 # ==========================================
 # Routing Rules
 # ==========================================
 
 rules:
-  # 中山大学校园资源：优先直连
+
+  # ------------------------------------------
+  # 1. SYSU 校园资源：优先直连
+  # ------------------------------------------
+
   - DOMAIN-SUFFIX,sysu.edu.cn,DIRECT
   - DOMAIN-SUFFIX,sysu.org.cn,DIRECT
 
-  # OpenAI / ChatGPT
+  # ------------------------------------------
+  # 2. OpenAI / ChatGPT：代理
+  # ------------------------------------------
+
   - GEOSITE,openai,PROXY
   - DOMAIN-SUFFIX,chatgpt.com,PROXY
   - DOMAIN-SUFFIX,chat.com,PROXY
@@ -76,19 +116,31 @@ rules:
   - DOMAIN-SUFFIX,oaistatic.com,PROXY
   - DOMAIN-SUFFIX,oaiusercontent.com,PROXY
 
-  # Anthropic / Claude
+  # ------------------------------------------
+  # 3. Anthropic / Claude：代理
+  # ------------------------------------------
+
   - GEOSITE,anthropic,PROXY
   - DOMAIN-SUFFIX,claude.ai,PROXY
   - DOMAIN-SUFFIX,claude.com,PROXY
   - DOMAIN-SUFFIX,anthropic.com,PROXY
 
-  # Private / LAN
+  # ------------------------------------------
+  # 4. 私有网络：直连
+  # ------------------------------------------
+
   - GEOSITE,private,DIRECT
   - GEOIP,private,DIRECT
 
-  # Mainland China
+  # ------------------------------------------
+  # 5. 中国大陆域名和 IP：直连
+  # ------------------------------------------
+
   - GEOSITE,cn,DIRECT
   - GEOIP,CN,DIRECT
 
-  # Other traffic
+  # ------------------------------------------
+  # 6. 其他流量：代理
+  # ------------------------------------------
+
   - MATCH,PROXY
