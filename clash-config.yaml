@@ -1,13 +1,27 @@
+
 # ==========================================
 # Mihomo DNS + Routing Rules
-# SYSU 校园网 + 国内直连 + 境外代理
+# SYSU 校园网 + 国内 IPv4/IPv6 直连 + 境外代理
+# 自建 VPS：IPv4 出口
 # 用于 3X-UI 远程规则导入
+# ==========================================
+
+# ==========================================
+# IPv6
+# ==========================================
+
+# 启用 Mihomo IPv6 网络支持
+ipv6: true
+
+
+# ==========================================
+# DNS Configuration
 # ==========================================
 
 dns:
   enable: true
 
-  # 开启 IPv6 DNS 解析，保留 AAAA 记录
+  # 开启 AAAA 记录解析
   ipv6: true
 
   # Fake-IP 模式
@@ -17,20 +31,19 @@ dns:
 
   cache-algorithm: arc
 
-  # DNS 请求遵循路由规则
-  # 配合 proxy-server-nameserver，避免代理节点解析循环依赖
+  # DNS 上游连接遵循路由规则
   respect-rules: true
 
   # ------------------------------------------
   # DNS 引导服务器
   # ------------------------------------------
 
-  # 用于解析 DNS 服务端等必要域名
+  # 解析 DNS 服务端等必要域名
   default-nameserver:
     - 223.5.5.5
 
-  # 代理节点域名解析专用
-  # 不依赖代理隧道，避免循环依赖
+  # 代理节点域名解析
+  # 避免代理节点解析依赖代理隧道
   proxy-server-nameserver:
     - 223.5.5.5
 
@@ -39,50 +52,49 @@ dns:
   # ------------------------------------------
 
   # 未命中 nameserver-policy 的域名
-  # 默认使用 Cloudflare DoH，并通过 PROXY 连接
+  # 使用 Cloudflare DoH，经 PROXY 连接
   nameserver:
     - "https://cloudflare-dns.com/dns-query#PROXY"
 
   # ------------------------------------------
-  # DNS 分流策略
+  # DNS 分流
   # ------------------------------------------
 
   nameserver-policy:
 
-    # 中山大学校园域名：系统 DNS
+    # 中山大学校园域名
     "+.sysu.edu.cn":
       - system
 
     "+.sysu.org.cn":
       - system
 
-    # 国内域名：系统 DNS
+    # 中国大陆域名
     "geosite:cn":
       - system
 
-    # 私有域名：系统 DNS
+    # 私有域名
     "geosite:private":
       - system
 
-    # 已识别的境外域名：Cloudflare DoH，经代理连接
+    # 已识别的境外域名
     "geosite:geolocation-!cn":
       - "https://cloudflare-dns.com/dns-query#PROXY"
 
   # ------------------------------------------
-  # DIRECT 出站 DNS
+  # DIRECT DNS
   # ------------------------------------------
 
-  # 直连出站的域名解析使用系统 DNS
+  # 直连出站使用系统 DNS
   direct-nameserver:
     - system
 
   direct-nameserver-follow-policy: false
 
   # ------------------------------------------
-  # Fake-IP 过滤
+  # Fake-IP Filter
   # ------------------------------------------
 
-  # 以下域名不分配 Fake-IP，返回真实 DNS 解析结果
   fake-ip-filter:
     - "geosite:private"
     - "+.sysu.edu.cn"
@@ -99,7 +111,7 @@ dns:
 rules:
 
   # ------------------------------------------
-  # 1. SYSU 校园资源：优先直连
+  # 1. SYSU 校园资源：本机直连
   # ------------------------------------------
 
   - DOMAIN-SUFFIX,sysu.edu.cn,DIRECT
@@ -130,17 +142,19 @@ rules:
   # ------------------------------------------
 
   - GEOSITE,private,DIRECT
-  - GEOIP,private,DIRECT
+  - GEOIP,private,DIRECT,no-resolve
 
   # ------------------------------------------
-  # 5. 中国大陆域名和 IP：直连
+  # 5. 中国大陆域名：本机直连
   # ------------------------------------------
 
   - GEOSITE,cn,DIRECT
-  - GEOIP,CN,DIRECT
+
+  # 中国大陆 IP：本机直连
+  - GEOIP,CN,DIRECT,no-resolve
 
   # ------------------------------------------
-  # 6. 其他流量：代理
+  # 6. 其他所有流量：代理
   # ------------------------------------------
 
   - MATCH,PROXY
