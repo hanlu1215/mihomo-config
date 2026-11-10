@@ -1,6 +1,6 @@
-
 # ==========================================
 # Mihomo DNS + Routing Rules
+# SYSU 校园网 + 国内直连 + 境外代理
 # 用于 3X-UI 远程规则导入
 # ==========================================
 
@@ -11,37 +11,50 @@ dns:
   fake-ip-range: 198.18.0.1/16
   cache-algorithm: arc
 
-  # 默认引导 DNS：用于解析 DNS 服务器域名等
+  # DNS 引导服务器
+  # 用于解析 Cloudflare DoH 和代理节点等域名
   default-nameserver:
     - 223.5.5.5
 
-  # 专门用于解析代理节点域名，避免代理 DNS 自身形成循环
+  # 代理节点域名解析
   proxy-server-nameserver:
     - 223.5.5.5
 
-  # 默认 DNS：境外域名使用 Cloudflare DoH，通过 PROXY 连接
+  # 默认 DNS：使用 Android 当前系统 DNS
   nameserver:
-    - "https://cloudflare-dns.com/dns-query#PROXY"
+    - system
 
-  # 国内域名和局域网域名使用 Android 系统当前配置的 DNS
+  # 根据域名分类选择 DNS
   nameserver-policy:
+
+    # 国内域名：系统默认 DNS
     "geosite:cn":
       - system
+
+    # 私有域名：系统默认 DNS
     "geosite:private":
       - system
-    "+.lan":
+
+    # 中山大学校园域名：系统默认 DNS
+    "+.sysu.edu.cn":
       - system
-    "+.local":
+    "+.sysu.org.cn":
       - system
 
-  # DIRECT 出站重新解析域名时使用系统 DNS
+    # 已识别的境外域名：Cloudflare DoH，通过代理连接
+    "geosite:geolocation-!cn":
+      - "https://cloudflare-dns.com/dns-query#PROXY"
+
+  # DIRECT 出站的域名解析使用系统 DNS
   direct-nameserver:
     - system
-  direct-nameserver-follow-policy: true
+  direct-nameserver-follow-policy: false
 
-  # 局域网域名不使用 Fake-IP
+  # 局域网和校园域名不使用 Fake-IP
   fake-ip-filter:
     - "geosite:private"
+    - "+.sysu.edu.cn"
+    - "+.sysu.org.cn"
     - "+.lan"
     - "+.local"
     - "localhost"
@@ -51,6 +64,10 @@ dns:
 # ==========================================
 
 rules:
+  # 中山大学校园资源：优先直连
+  - DOMAIN-SUFFIX,sysu.edu.cn,DIRECT
+  - DOMAIN-SUFFIX,sysu.org.cn,DIRECT
+
   # OpenAI / ChatGPT
   - GEOSITE,openai,PROXY
   - DOMAIN-SUFFIX,chatgpt.com,PROXY
