@@ -1,62 +1,57 @@
 
 # ==========================================
-# 3X-UI Remote Clash Rules
-# For Mihomo / Clash Meta for Android
+# Mihomo DNS + Routing Rules
+# 用于 3X-UI 远程规则导入
 # ==========================================
 
-# DNS configuration
 dns:
   enable: true
   ipv6: false
-
-  # Fake-IP mode
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  cache-algorithm: arc
 
-  # Bootstrap DNS:
-  # Used to resolve DNS server hostnames and other bootstrap needs
+  # 默认引导 DNS：用于解析 DNS 服务器域名等
   default-nameserver:
     - 223.5.5.5
 
-  # DNS for proxy node domain resolution
-  # This must be available before the proxy tunnel is established
+  # 专门用于解析代理节点域名，避免代理 DNS 自身形成循环
   proxy-server-nameserver:
     - 223.5.5.5
 
-  # Default DNS: overseas domains use Cloudflare DoH through PROXY
+  # 默认 DNS：境外域名使用 Cloudflare DoH，通过 PROXY 连接
   nameserver:
     - "https://cloudflare-dns.com/dns-query#PROXY"
 
-  # Domestic and private domain DNS policies
+  # 国内域名和局域网域名使用 Android 系统当前配置的 DNS
   nameserver-policy:
     "geosite:cn":
-      - "https://dns.alidns.com/dns-query#DIRECT"
-
+      - system
     "geosite:private":
-      - "https://dns.alidns.com/dns-query#DIRECT"
-
+      - system
     "+.lan":
-      - "https://dns.alidns.com/dns-query#DIRECT"
-
+      - system
     "+.local":
-      - "https://dns.alidns.com/dns-query#DIRECT"
+      - system
 
-  # DNS for DIRECT traffic
+  # DIRECT 出站重新解析域名时使用系统 DNS
   direct-nameserver:
-    - "https://dns.alidns.com/dns-query#DIRECT"
-
+    - system
   direct-nameserver-follow-policy: true
 
-  # Do not use Fake-IP for local domains
+  # 局域网域名不使用 Fake-IP
   fake-ip-filter:
     - "geosite:private"
     - "+.lan"
     - "+.local"
     - "localhost"
 
-# Routing rules
+# ==========================================
+# Routing Rules
+# ==========================================
+
 rules:
-  # OpenAI
+  # OpenAI / ChatGPT
   - GEOSITE,openai,PROXY
   - DOMAIN-SUFFIX,chatgpt.com,PROXY
   - DOMAIN-SUFFIX,chat.com,PROXY
@@ -70,11 +65,13 @@ rules:
   - DOMAIN-SUFFIX,claude.com,PROXY
   - DOMAIN-SUFFIX,anthropic.com,PROXY
 
-  # Private and domestic traffic
+  # Private / LAN
   - GEOSITE,private,DIRECT
   - GEOIP,private,DIRECT
+
+  # Mainland China
   - GEOSITE,cn,DIRECT
   - GEOIP,CN,DIRECT
 
-  # All other traffic
+  # Other traffic
   - MATCH,PROXY
