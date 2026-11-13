@@ -1,0 +1,120 @@
+mixed-port: 7890
+ipv6: true
+udp: true
+allow-lan: false
+bind-address: '*'
+mode: rule
+log-level: info
+unified-delay: true
+experimental:
+  ignore-resolve-fail: true
+cfw-latency-timeout: 8000
+cfw-latency-url: http://YouTube.com/generate_204
+cfw-conn-break-strategy: true
+hosts:
+  mtalk.google.com: 108.177.125.188
+  services.googleapis.cn: 74.125.203.94
+dns:
+  enable: true
+  listen: 127.0.0.1:1053
+  ipv6: true
+  default-nameserver: [114.114.114.114, 223.5.5.5, 119.29.29.29]
+  enhanced-mode: fake-ip
+  fake-ip-range: 28.0.0.1/8
+  use-hosts: true
+  fake-ip-filter: ['*.lan', '*.localdomain', '*.example', '*.invalid', '*.localhost', '*.test', '*.local', '*.home.arpa', time.*.com, time.*.gov, time.*.edu.cn, time.*.apple.com, time1.*.com, time2.*.com, time3.*.com, time4.*.com, time5.*.com, time6.*.com, time7.*.com, ntp.*.com, ntp1.*.com, ntp2.*.com, ntp3.*.com, ntp4.*.com, ntp5.*.com, ntp6.*.com, ntp7.*.com, '*.time.edu.cn', '*.ntp.org.cn', +.pool.ntp.org, time1.cloud.tencent.com, music.163.com, '*.music.163.com', '*.126.net', musicapi.taihe.com, music.taihe.com, songsearch.kugou.com, trackercdn.kugou.com, '*.kuwo.cn', api-jooxtt.sanook.com, api.joox.com, joox.com, y.qq.com, '*.y.qq.com', streamoc.music.tc.qq.com, mobileoc.music.tc.qq.com, isure.stream.qqmusic.qq.com, dl.stream.qqmusic.qq.com, aqqmusic.tc.qq.com, amobile.music.tc.qq.com, '*.xiami.com', '*.music.migu.cn', music.migu.cn, +.msftconnecttest.com, +.msftncsi.com, msftconnecttest.com, msftncsi.com, localhost.ptlogin2.qq.com, localhost.sec.qq.com, +.srv.nintendo.net, +.stun.playstation.net, xbox.*.microsoft.com, xnotify.xboxlive.com, +.ipv6.microsoft.com, +.battlenet.com.cn, +.wotgame.cn, +.wggames.cn, +.wowsgame.cn, +.wargaming.net, proxy.golang.org, stun.*.*, stun.*.*.*, +.stun.*.*, +.stun.*.*.*, +.stun.*.*.*.*, heartbeat.belkin.com, '*.linksys.com', '*.linksyssmartwifi.com', '*.router.asus.com', mesu.apple.com, swscan.apple.com, swquery.apple.com, swdownload.apple.com, swcdn.apple.com, swdist.apple.com, lens.l.google.com, stun.l.google.com, '*.square-enix.com', '*.finalfantasyxiv.com', '*.ffxiv.com', '*.ff14.sdo.com', ff.dorado.sdo.com, '*.mcdn.bilivideo.cn', +.media.dssott.com, +.pvp.net]
+  nameserver: ['tls://223.5.5.5:853', 'tls://223.6.6.6:853', 'https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query']
+proxies:
+- name: ba51124f-vless_reality_vision
+  type: vless
+  server: 45.62.96.110
+  port: 20475
+  uuid: ba51124f-126b-4761-bb0b-e6d947073057
+  udp: true
+  flow: xtls-rprx-vision
+  network: tcp
+  tls: true
+  servername: www.samsung.com
+  client-fingerprint: chrome
+  reality-opts:
+    public-key: QvG9qE7yHRZ98bBRtp8xrGezu20P-to2PtYuEQrSTgs
+    short-id: 6ba85179e30d4fc2
+  skip-cert-verify: true
+- name: 960d50c4-singbox_hysteria2
+  type: hysteria2
+  server: chi.anjelica.xyz
+  port: 42641
+  password: 960d50c4-0bd6-4fc6-8d35-ba758a914617
+  skip-cert-verify: true
+- name: nerd.anjelica.xyz_VLESS_WS_CF
+  type: vless
+  server: cloudflare.182682.xyz
+  port: 443
+  uuid: 69425df2-15cf-4c5e-b916-948c6c731782
+  udp: true
+  network: ws
+  ws-opts:
+    path: /agwxws?ed=2048
+    headers:
+      Host: nerd.anjelica.xyz
+  tls: true
+  servername: nerd.anjelica.xyz
+  skip-cert-verify: true
+proxy-groups:
+- name: Proxy
+  type: select
+  proxies:
+  - Auto
+  - ba51124f-vless_reality_vision
+  - 960d50c4-singbox_hysteria2
+  - nerd.anjelica.xyz_VLESS_WS_CF
+- name: Auto
+  type: url-test
+  proxies:
+  - ba51124f-vless_reality_vision
+  - 960d50c4-singbox_hysteria2
+  - nerd.anjelica.xyz_VLESS_WS_CF
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+  tolerance: 50
+rule-providers:
+  private:
+    type: http
+    behavior: domain
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt
+    path: ./ruleset/private.yaml
+    interval: 86400
+  proxy:
+    type: http
+    behavior: domain
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt
+    path: ./ruleset/proxy.yaml
+    interval: 86400
+  domestic:
+    type: http
+    behavior: domain
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt
+    path: ./ruleset/domestic.yaml
+    interval: 86400
+  lancidr:
+    type: http
+    behavior: ipcidr
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt
+    path: ./ruleset/lancidr.yaml
+    interval: 86400
+  cncidr:
+    type: http
+    behavior: ipcidr
+    url: https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt
+    path: ./ruleset/cncidr.yaml
+    interval: 86400
+rules:
+- DOMAIN-SUFFIX,science.org,DIRECT
+- DOMAIN-SUFFIX,cloudflare.com,DIRECT
+- RULE-SET,private,DIRECT
+- RULE-SET,proxy,Proxy
+- RULE-SET,domestic,DIRECT
+- RULE-SET,lancidr,DIRECT,no-resolve
+- RULE-SET,cncidr,DIRECT,no-resolve
+- GEOIP,CN,DIRECT
+- MATCH,Proxy
